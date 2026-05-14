@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 Advanced Modbus Simulation Server</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body data-theme="dark">
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-title">
+                <h1>🔧 Modbus Simulation Server</h1>
+                <span class="version-badge" id="appVersionBadge">v2.3</span>
+            </div>
+            <div class="header-status">
+                <div class="status-badge" id="connectionStatus">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Connecting...</span>
+                </div>
+                <div class="status-badge modbus-status">
+                    <span class="status-icon">📡</span>
+                    <span>Port: <strong id="modbusPort">5020</strong></span>
+                </div>
+                <button class="theme-toggle" onclick="App.toggleTheme()" title="Toggle theme">
+                    <span class="theme-icon">🌓</span>
+                </button>
+            </div>
+        </header>
+        
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs">
+            <button class="nav-tab active" data-tab="overview">
+                <span class="tab-icon">📊</span>
+                <span class="tab-text">Overview</span>
+            </button>
+            <button class="nav-tab" data-tab="sensors">
+                <span class="tab-icon">📡</span>
+                <span class="tab-text">Sensors</span>
+            </button>
+            <button class="nav-tab" data-tab="actuators">
+                <span class="tab-icon">🎛️</span>
+                <span class="tab-text">Actuators</span>
+            </button>
+            <button class="nav-tab" data-tab="monitoring">
+                <span class="tab-icon">📈</span>
+                <span class="tab-text">Monitoring</span>
+            </button>
+            <button class="nav-tab" data-tab="simulation">
+                <span class="tab-icon">🧪</span>
+                <span class="tab-text">Simulation</span>
+            </button>
+            <button class="nav-tab" data-tab="settings">
+                <span class="tab-icon">⚙️</span>
+                <span class="tab-text">Settings</span>
+            </button>
+        </nav>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- ==================== OVERVIEW TAB ==================== -->
+            <div class="tab-content active" id="tab-overview">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📡</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Sensors</div>
+                            <div class="stat-value" id="sensorCount">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🎛️</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Actuators</div>
+                            <div class="stat-value" id="actuatorCount">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📖</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Reads</div>
+                            <div class="stat-value" id="totalReads">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✏️</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Writes</div>
+                            <div class="stat-value" id="totalWrites">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🔌</div>
+                        <div class="stat-content">
+                            <div class="stat-label">WebSockets</div>
+                            <div class="stat-value" id="wsCount">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⏱️</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Uptime</div>
+                            <div class="stat-value" id="uptime">0s</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">📈 Live activity</h3>
+                        <select id="overviewChartDevice" class="chart-select">
+                            <option value="">-- Select device --</option>
+                        </select>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="overviewChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="section-header">
+                    <h3>🔥 Active devices</h3>
+                    <span class="device-count" id="activeDeviceCount">0 devices</span>
+                </div>
+                <div class="device-grid" id="overviewDevices">
+                    <div class="empty-state">
+                        <div class="empty-icon">📡</div>
+                        <h4>Waiting for Modbus requests</h4>
+                        <p>Devices are registered automatically when they are requested.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ==================== SENSORS TAB ==================== -->
+            <div class="tab-content" id="tab-sensors">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">📡 Sensor values</h3>
+                        <div class="chart-controls">
+                            <select id="sensorChartSelect" class="chart-select">
+                                <option value="">-- Select sensor --</option>
+                            </select>
+                            <button onclick="App.exportSensorData()" class="btn btn-secondary">
+                                <span>📥</span> Export CSV
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="sensorChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="section-header">
+                    <h3>📡 Registered sensors</h3>
+                    <div class="filter-controls">
+                        <input type="text" id="sensorFilter" placeholder="🔍 Search..." class="filter-input">
+                    </div>
+                </div>
+                <div class="device-grid" id="sensorGrid">
+                    <div class="empty-state">
+                        <div class="empty-icon">📡</div>
+                        <h4>No sensors registered</h4>
+                        <p>Sensors are registered automatically on Modbus read requests.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ==================== ACTUATORS TAB ==================== -->
+            <div class="tab-content" id="tab-actuators">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">🎛️ Actuator values</h3>
+                        <select id="actuatorChartSelect" class="chart-select">
+                            <option value="">-- Select actuator --</option>
+                        </select>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="actuatorChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="section-header">
+                    <h3>🎛️ Registered actuators</h3>
+                    <div class="filter-controls">
+                        <input type="text" id="actuatorFilter" placeholder="🔍 Search..." class="filter-input">
+                    </div>
+                </div>
+                <div class="device-grid" id="actuatorGrid">
+                    <div class="empty-state">
+                        <div class="empty-icon">🎛️</div>
+                        <h4>No actuators registered</h4>
+                        <p>Actuators are registered automatically on Modbus write requests.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ==================== MONITORING TAB ==================== -->
+            <div class="tab-content" id="tab-monitoring">
+                <div class="stats-grid stats-grid-small">
+                    <div class="stat-card stat-card-warning">
+                        <div class="stat-icon">⚠️</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Errors</div>
+                            <div class="stat-value" id="errorCount">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⚡</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Req/Sek</div>
+                            <div class="stat-value" id="reqPerSec">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Datenpunkte</div>
+                            <div class="stat-value" id="dataPointsCount">0</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>📋 Event-Log</h3>
+                        <div class="panel-actions">
+                            <button onclick="App.clearLogs()" class="btn btn-small btn-secondary">🗑️ Clear</button>
+                            <button onclick="App.exportLogs()" class="btn btn-small btn-secondary">📥 Export</button>
+                        </div>
+                    </div>
+                    <div class="log-container" id="eventLog">
+                        <div class="log-entry">
+                            <span class="log-time">--:--:--</span>
+                            <span class="log-type log-info">INFO</span>
+                            <span class="log-message">Warte auf Events...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ==================== SIMULATION TAB ==================== -->
+            <div class="tab-content" id="tab-simulation">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>🧪 Configure simulation mode</h3>
+                    </div>
+                    <div class="panel-body">
+                        <p class="panel-description">
+                            Select a device and configure its simulation behavior.
+                        </p>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Select device</label>
+                                <select id="simDeviceSelect" class="form-input">
+                                    <option value="">-- Select device --</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Simulationsmodus</label>
+                                <select id="simModeSelect" class="form-input">
+                                    <option value="random">🎲 Random</option>
+                                    <option value="constant">📌 Constant</option>
+                                    <option value="pid">🎯 PID-Simulation</option>
+                                    <option value="ramp">📈 Ramp</option>
+                                    <option value="sine">〰️ Sinus-Welle</option>
+                                    <option value="noise">📊 Noise</option>
+                                    <option value="error">⚠️ Error simulation</option>
+                                    <option value="manual">✋ Manual</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div id="simConfigFields" class="sim-config-fields"></div>
+                        
+                        <div class="form-actions">
+                            <button onclick="App.applySimulation()" class="btn btn-primary">
+                                ✅ Apply
+                            </button>
+                            <button onclick="App.applySimulationToAll()" class="btn btn-secondary">
+                                📋 Apply to all sensors
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>🎯 Global PID parameters</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="settings-grid">
+                            <div class="setting-item">
+                                <label class="setting-label">Kp (Proportional)</label>
+                                <input type="number" id="pidKp" value="1.0" step="0.1" class="form-input setting-input">
+                            </div>
+                            <div class="setting-item">
+                                <label class="setting-label">Ki (Integral)</label>
+                                <input type="number" id="pidKi" value="0.1" step="0.01" class="form-input setting-input">
+                            </div>
+                            <div class="setting-item">
+                                <label class="setting-label">Kd (Derivative)</label>
+                                <input type="number" id="pidKd" value="0.05" step="0.01" class="form-input setting-input">
+                            </div>
+                            <div class="setting-item">
+                                <label class="setting-label">Setpoint</label>
+                                <input type="number" id="pidSetpoint" value="50" step="1" class="form-input setting-input">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>⚡ Schnellaktionen</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="quick-actions">
+                            <button onclick="App.setAllSensorsRandom()" class="btn btn-action">
+                                🎲 Set all to random
+                            </button>
+                            <button onclick="App.setAllSensorsSine()" class="btn btn-action">
+                                〰️ Alle auf Sinus
+                            </button>
+                            <button onclick="App.setAllSensorsConstant()" class="btn btn-action">
+                                📌 Set all to constant
+                            </button>
+                            <button onclick="App.resetAllSimulations()" class="btn btn-action btn-warning">
+                                🔄 Reset all
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ==================== SETTINGS TAB ==================== -->
+            <div class="tab-content" id="tab-settings">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>🌐 Server configuration</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <span class="setting-label">Modbus Port</span>
+                                <span class="setting-description">TCP port for the Modbus server</span>
+                            </div>
+                            <span class="setting-value" id="cfgModbusPort">5020</span>
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <span class="setting-label">Web Port</span>
+                                <span class="setting-description">HTTP port for the web interface</span>
+                            </div>
+                            <span class="setting-value" id="cfgWebPort">8080</span>
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <span class="setting-label">Sensor/actuator threshold</span>
+                                <span class="setting-description">Addresses >= threshold are actuators</span>
+                            </div>
+                            <span class="setting-value" id="cfgThreshold">500</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>⏱️ Simulations-Timing</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <span class="setting-label">Simulations-Intervall (ms)</span>
+                                <span class="setting-description">Update rate for time-based modes (sine, ramp, pid, noise). Event-based modes (random, constant, manual) change only on Modbus reads.</span>
+                            </div>
+                            <input type="number" id="simUpdateInterval" value="4000" min="50" max="60000" step="50" class="form-input setting-input">
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <span class="setting-label">Broadcast-Intervall (ms)</span>
+                                <span class="setting-description">WebSocket-Update-Rate zum Web-Interface</span>
+                            </div>
+                            <input type="number" id="simBroadcastInterval" value="5000" min="50" max="60000" step="50" class="form-input setting-input">
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <span class="setting-label"></span>
+                            </div>
+                            <button onclick="App.applySimIntervals()" class="btn btn-primary">Intervalle anwenden</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>🎨 Appearance</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <span class="setting-label">Theme</span>
+                                <span class="setting-description">Light/dark mode</span>
+                            </div>
+                            <select id="themeSelect" class="form-input setting-select">
+                                <option value="dark">🌙 Dark</option>
+                                <option value="light">☀️ Hell</option>
+                            </select>
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <span class="setting-label">Chart history</span>
+                                <span class="setting-description">Anzahl der Datenpunkte im Chart</span>
+                            </div>
+                            <input type="number" id="chartHistory" value="100" min="10" max="1000" class="form-input setting-input">
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <span class="setting-label">Auto-Scroll Logs</span>
+                                <span class="setting-description">Automatisches Scrollen der Logs</span>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" id="autoScrollLogs" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>🔧 Actions</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="action-buttons">
+                            <button onclick="App.exportConfig()" class="btn btn-secondary">
+                                📥 Export configuration
+                            </button>
+                            <button onclick="App.resetAllDevices()" class="btn btn-danger">
+                                🗑️ Reset all devices
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>ℹ️ About</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="about-info">
+                            <p><strong>Advanced Modbus Simulation Server</strong></p>
+                            <p>Version <span id="aboutVersion">2.3</span></p>
+                            <p>pymodbus <span id="aboutPymodbusVersion">-</span></p>
+                            <p>Ein leistungsstarker Modbus TCP Server mit dynamischer Device Registry, mehreren Simulationsmodi und Echtzeit Web-Interface.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Modal for device configuration -->
+    <div class="modal-overlay" id="deviceModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Configure device</h3>
+                <button class="modal-close" onclick="App.closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="App.closeModal()">Abbrechen</button>
+                <button class="btn btn-primary" onclick="App.saveDeviceConfig()">Speichern</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+    
+    <!-- JavaScript -->
+    <script src="/app.js"></script>
+</body>
+</html>
