@@ -1,6 +1,6 @@
-# Advanced Modbus Simulation Server
+# Simple Modbus Simulation Server
 
-Advanced Modbus Simulation Server is a Python-based Modbus TCP simulator with a browser-based dashboard, WebSocket live synchronization and configurable sensor simulation modes.
+Simple Modbus Simulation Server is a Python-based Modbus TCP simulator with a browser-based dashboard, WebSocket live synchronization and configurable sensor simulation modes.
 
 The server is designed for engineering, automation testing, PLC integration experiments and UI development where a repeatable Modbus endpoint is needed without physical hardware.
 
